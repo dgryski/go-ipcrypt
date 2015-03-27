@@ -5,35 +5,33 @@ https://github.com/veorq/ipcrypt
 package ipcrypt
 
 // Encrypt a 4-byte value with a 16-byte key
-func Encrypt(key [16]byte, ip [4]byte) [4]byte {
-	s := state(ip)
-	s = xor4(s, key[:4])
+func Encrypt(key [4]uint32, ip uint32) uint32 {
+	s := ip
+	s = xor4(s, key[0])
 	s = fwd(s)
-	s = xor4(s, key[4:8])
+	s = xor4(s, key[1])
 	s = fwd(s)
-	s = xor4(s, key[8:12])
+	s = xor4(s, key[2])
 	s = fwd(s)
-	s = xor4(s, key[12:16])
+	s = xor4(s, key[3])
 	return s
 }
 
 // Decrypt a 4-byte value with a 16-byte key
-func Decrypt(key [16]byte, ip [4]byte) [4]byte {
-	s := state(ip)
-	s = xor4(s, key[12:16])
+func Decrypt(key [4]uint32, ip uint32) uint32 {
+	s := ip
+	s = xor4(s, key[3])
 	s = bwd(s)
-	s = xor4(s, key[8:12])
+	s = xor4(s, key[2])
 	s = bwd(s)
-	s = xor4(s, key[4:8])
+	s = xor4(s, key[1])
 	s = bwd(s)
-	s = xor4(s, key[:4])
+	s = xor4(s, key[0])
 	return s
 }
 
-type state [4]byte
-
-func fwd(s state) state {
-	b0, b1, b2, b3 := s[0], s[1], s[2], s[3]
+func fwd(s uint32) uint32 {
+	b0, b1, b2, b3 := byte(s>>24), byte(s>>16), byte(s>>8), byte(s>>0)
 	b0 += b1
 	b2 += b3
 	b1 = rotl(b1, 2)
@@ -48,11 +46,11 @@ func fwd(s state) state {
 	b1 ^= b2
 	b3 ^= b0
 	b2 = rotl(b2, 4)
-	return [4]byte{b0, b1, b2, b3}
+	return uint32(b0)<<24 | uint32(b1)<<16 | uint32(b2)<<8 | uint32(b3)
 }
 
-func bwd(s state) state {
-	b0, b1, b2, b3 := s[0], s[1], s[2], s[3]
+func bwd(s uint32) uint32 {
+	b0, b1, b2, b3 := byte(s>>24), byte(s>>16), byte(s>>8), byte(s>>0)
 	b2 = rotl(b2, 4)
 	b1 ^= b2
 	b3 ^= b0
@@ -67,13 +65,13 @@ func bwd(s state) state {
 	b3 = rotl(b3, 3)
 	b0 -= b1
 	b2 -= b3
-	return [4]byte{b0, b1, b2, b3}
+	return uint32(b0)<<24 | uint32(b1)<<16 | uint32(b2)<<8 | uint32(b3)
 }
 
 func rotl(b byte, r uint) byte {
-	return ((b << r) & 0xff) | (b >> (8 - r))
+	return (b << r) | (b >> (8 - r))
 }
 
-func xor4(x [4]byte, y []byte) [4]byte {
-	return [4]byte{x[0] ^ y[0], x[1] ^ y[1], x[2] ^ y[2], x[3] ^ y[3]}
+func xor4(x, y uint32) uint32 {
+	return x ^ y
 }

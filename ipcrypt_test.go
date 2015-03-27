@@ -1,6 +1,7 @@
 package ipcrypt
 
 import (
+	"encoding/binary"
 	"testing"
 
 	"github.com/dgryski/go-skip32"
@@ -8,32 +9,44 @@ import (
 
 func TestRoundtrip(t *testing.T) {
 
-	key := [16]byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
+	tests := []struct {
+		in        uint32
+		key       [4]uint32
+		encrypted [4]byte
+	}{
+		// test vector from ipcrypt.py
+		{0x01020304, [4]uint32{0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff}, [4]byte{107, 47, 222, 186}},
 
-	ip := [4]byte{1, 2, 3, 4}
-
-	for i := 0; i < 100; i++ {
-		ip = Encrypt(key, ip)
+		// make sure key is correctly big-endian
+		{0x01020304, [4]uint32{0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f}, [4]byte{65, 203, 192, 63}},
 	}
 
-	if ip != [4]byte{107, 47, 222, 186} {
-		t.Errorf("Encrypt failed")
-	}
+	for _, tt := range tests {
 
-	for i := 0; i < 100; i++ {
-		ip = Decrypt(key, ip)
-	}
+		ip := tt.in
 
-	if ip != [4]byte{1, 2, 3, 4} {
-		t.Errorf("Decrypt failed")
+		for i := 0; i < 100; i++ {
+			ip = Encrypt(tt.key, ip)
+		}
+
+		if want32 := binary.BigEndian.Uint32(tt.encrypted[:]); ip != want32 {
+			t.Errorf("Encrypt(%08x,%08x)**100=%08x, want %08x", tt.key, tt.in, ip, want32)
+		}
+
+		for i := 0; i < 100; i++ {
+			ip = Decrypt(tt.key, ip)
+		}
+
+		if ip != tt.in {
+			t.Errorf("Decrypt(%08x,Encrypt(...,%08x))**100=%08x, want %08x", tt.key, tt.in, ip, tt.in)
+		}
 	}
 }
 
 func BenchmarkIPCrypt(b *testing.B) {
 
-	key := [16]byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
-	ip := [4]byte{1, 2, 3, 4}
-
+	key := [4]uint32{0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff}
+	ip := uint32(0x01020304)
 	for i := 0; i < b.N; i++ {
 		Encrypt(key, ip)
 	}
