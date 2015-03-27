@@ -36,8 +36,6 @@ func fwd(s state) state {
 	b0, b1, b2, b3 := s[0], s[1], s[2], s[3]
 	b0 += b1
 	b2 += b3
-	b0 &= 0xff
-	b2 &= 0xff
 	b1 = rotl(b1, 2)
 	b3 = rotl(b3, 5)
 	b1 ^= b0
@@ -45,8 +43,6 @@ func fwd(s state) state {
 	b0 = rotl(b0, 4)
 	b0 += b3
 	b2 += b1
-	b0 &= 0xff
-	b2 &= 0xff
 	b1 = rotl(b1, 3)
 	b3 = rotl(b3, 7)
 	b1 ^= b2
@@ -64,8 +60,6 @@ func bwd(s state) state {
 	b3 = rotl(b3, 1)
 	b0 -= b3
 	b2 -= b1
-	b0 &= 0xff
-	b2 &= 0xff
 	b0 = rotl(b0, 4)
 	b1 ^= b0
 	b3 ^= b2
@@ -73,8 +67,6 @@ func bwd(s state) state {
 	b3 = rotl(b3, 3)
 	b0 -= b1
 	b2 -= b3
-	b0 &= 0xff
-	b2 &= 0xff
 	return [4]byte{b0, b1, b2, b3}
 }
 
