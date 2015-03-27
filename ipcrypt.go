@@ -4,7 +4,7 @@ https://github.com/veorq/ipcrypt
 */
 package ipcrypt
 
-// Encrypt a 4-byte value with a 16-byte key
+// Encrypt a 4-byte value with a 16-byte big-endian key
 func Encrypt(key [4]uint32, ip uint32) uint32 {
 	s := ip
 	s = xor4(s, key[0])
@@ -17,7 +17,7 @@ func Encrypt(key [4]uint32, ip uint32) uint32 {
 	return s
 }
 
-// Decrypt a 4-byte value with a 16-byte key
+// Decrypt a 4-byte value with a 16-byte big-endian key
 func Decrypt(key [4]uint32, ip uint32) uint32 {
 	s := ip
 	s = xor4(s, key[3])
