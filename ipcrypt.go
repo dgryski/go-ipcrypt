@@ -4,6 +4,12 @@ https://github.com/veorq/ipcrypt
 */
 package ipcrypt
 
+type Cipher struct{ key [4]uint32 }
+
+func New(key [4]uint32) *Cipher            { return &Cipher{key: key} }
+func (c *Cipher) Encrypt(ip uint32) uint32 { return Encrypt(c.key, ip) }
+func (c *Cipher) Decrypt(ip uint32) uint32 { return Decrypt(c.key, ip) }
+
 // Encrypt a 4-byte value with a 16-byte big-endian key
 func Encrypt(key [4]uint32, ip uint32) uint32 {
 	s := ip
